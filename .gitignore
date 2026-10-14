@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+
+/backend/target/
+
+# Flutter artifacts and local tooling
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/
+**/coverage/
+**/android/local.properties
+**/ios/Flutter/.last_build_id
+**/ios/Pods/
+**/.packages

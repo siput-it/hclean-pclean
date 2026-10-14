@@ -1,0 +1,523 @@
+openapi: 3.1.0
+info:
+  title: Hclean & Pclean API
+  version: 1.0.0
+  description: Kontrak backend Hclean & Pclean pada Tahap 5. Profil pengguna, profil pekerja, alamat, dan katalog layanan sudah aktif dengan autentikasi dan kepemilikan data per pengguna, sementara workflow pesanan tetap disimpan dalam status belum tersedia.
+servers:
+  - url: http://127.0.0.1:3000
+paths:
+  /health:
+    get:
+      operationId: health
+      responses:
+        '200':
+          description: Backend merespons; database tidak diperiksa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1:
+    get:
+      operationId: apiInfo
+      responses:
+        '200':
+          description: Informasi versi API.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfoResponse'
+  /api/v1/auth/register:
+    post:
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '501':
+          $ref: '#/components/responses/AuthenticationUnavailable'
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '501':
+          $ref: '#/components/responses/AuthenticationUnavailable'
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      responses:
+        '501':
+          $ref: '#/components/responses/AuthenticationUnavailable'
+  /api/v1/users/me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Profil pengguna terautentikasi.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/DatabaseUnavailable'
+    patch:
+      operationId: updateCurrentUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profil pengguna berhasil diubah.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/DatabaseUnavailable'
+  /api/v1/workers/me:
+    get:
+      operationId: getCurrentWorkerProfile
+      responses:
+        '200':
+          description: Profil pekerja terautentikasi.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      operationId: updateCurrentWorkerProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerProfileUpdateRequest'
+      responses:
+        '200':
+          description: Profil pekerja berhasil diperbarui.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/addresses:
+    get:
+      operationId: listAddresses
+      responses:
+        '200':
+          description: Daftar alamat milik pengguna.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/DatabaseUnavailable'
+    post:
+      operationId: createAddress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressCreateRequest'
+      responses:
+        '201':
+          description: Alamat berhasil dibuat.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/DatabaseUnavailable'
+  /api/v1/services:
+    get:
+      operationId: listServices
+      responses:
+        '200':
+          description: Daftar kategori dan harga contoh.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListResponse'
+  /api/v1/services/{service_id}:
+    get:
+      operationId: getService
+      parameters:
+        - $ref: '#/components/parameters/ServiceId'
+      responses:
+        '200':
+          description: Detail kategori layanan simulasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/orders:
+    get:
+      operationId: listOrders
+      responses:
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+    post:
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+  /api/v1/orders/{order_id}:
+    get:
+      operationId: getOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+  /api/v1/orders/{order_id}/accept:
+    post:
+      operationId: acceptOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+  /api/v1/orders/{order_id}/start:
+    post:
+      operationId: startOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+  /api/v1/orders/{order_id}/complete:
+    post:
+      operationId: completeOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+  /api/v1/orders/{order_id}/cancel:
+    post:
+      operationId: cancelOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '501':
+          $ref: '#/components/responses/OrdersUnavailable'
+  /api/v1/wallet:
+    get:
+      operationId: getWallet
+      responses:
+        '200':
+          description: Ringkasan saldo contoh yang bukan dana sungguhan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+  /api/v1/wallet/transactions:
+    get:
+      operationId: listWalletTransactions
+      responses:
+        '200':
+          description: Daftar transaksi simulasi, saat ini kosong.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletTransactionsResponse'
+components:
+  parameters:
+    ServiceId:
+      name: service_id
+      in: path
+      required: true
+      schema:
+        type: string
+    OrderId:
+      name: order_id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    ValidationError:
+      description: Request invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Endpoint atau layanan tidak ditemukan.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AuthenticationUnavailable:
+      description: Autentikasi belum diimplementasikan; data tidak disimpan atau diverifikasi.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Token tidak ada atau tidak valid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Akses ditolak karena role atau kepemilikan tidak valid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    DatabaseUnavailable:
+      description: PostgreSQL belum tersedia atau query gagal.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    OrdersUnavailable:
+      description: Workflow pesanan belum diimplementasikan; tidak ada mutasi.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          const: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+    HealthResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          const: true
+        data:
+          type: object
+          required: [status, service]
+          properties:
+            status:
+              const: ok
+            service:
+              type: string
+    ApiInfoResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          const: true
+        data:
+          type: object
+          required: [version, service, message]
+          properties:
+            version:
+              const: v1
+            service:
+              type: string
+            message:
+              const: API ready
+    RegisterRequest:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+        role:
+          type: string
+          enum: [customer, worker]
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+    UpdateProfileRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        phone_number:
+          type: string
+          minLength: 1
+          maxLength: 32
+    WorkerProfileUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        bio:
+          type: string
+          maxLength: 1000
+        is_available:
+          type: boolean
+    AddressCreateRequest:
+      type: object
+      required: [recipient_name, recipient_phone, full_address]
+      properties:
+        label:
+          type: string
+          maxLength: 80
+        recipient_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        recipient_phone:
+          type: string
+          minLength: 8
+          maxLength: 30
+        full_address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        additional_details:
+          type: string
+          maxLength: 300
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        is_primary:
+          type: boolean
+    CreateOrderRequest:
+      type: object
+      required: [service_id, scheduled_at, address]
+      properties:
+        service_id:
+          type: string
+        scheduled_at:
+          type: string
+          description: Format bebas non-kosong pada Tahap 2; format tanggal belum dinormalisasi.
+        address:
+          type: string
+          minLength: 1
+          maxLength: 500
+        notes:
+          type: [string, 'null']
+          maxLength: 2000
+    Service:
+      type: object
+      required: [id, name, description, price_rupiah, price_unit, simulated]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price_rupiah:
+          type: integer
+          minimum: 0
+        price_unit:
+          const: per_order
+        simulated:
+          const: true
+    ServiceListResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          const: true
+        data:
+          type: object
+          required: [simulated, items]
+          properties:
+            simulated:
+              const: true
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Service'
+    ServiceResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          const: true
+        data:
+          $ref: '#/components/schemas/Service'
+    WalletResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          const: true
+        data:
+          type: object
+          required: [balance_rupiah, simulated, is_real_money, message]
+          properties:
+            balance_rupiah:
+              type: integer
+              const: 0
+            simulated:
+              const: true
+            is_real_money:
+              const: false
+            message:
+              type: string
+    WalletTransactionsResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          const: true
+        data:
+          type: object
+          required: [simulated, transactions]
+          properties:
+            simulated:
+              const: true
+            transactions:
+              type: array
+              maxItems: 0
+              items:
+                type: object
